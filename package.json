@@ -2,7 +2,7 @@
   "name": "perplexity-pro-ai-chat",
   "displayName": "Perplexity Pro AI Chat",
   "description": "A VS Code extension that mimics GitHub Copilot Chat agent functionality using Perplexity Pro AI as the backend.",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "engines": {
     "vscode": "^1.104.0"
   },
