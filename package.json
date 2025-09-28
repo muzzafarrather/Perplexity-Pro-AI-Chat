@@ -1,0 +1,114 @@
+{
+  "name": "perplexity-pro-ai-chat",
+  "displayName": "Perplexity Pro AI Chat",
+  "description": "A VS Code extension that mimics GitHub Copilot Chat agent functionality using Perplexity Pro AI as the backend.",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.104.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "perplexity-pro-ai-chat.helloWorld",
+        "title": "Hello World"
+      },
+      {
+        "command": "perplexity-pro-ai-chat.openChat",
+        "title": "Open Perplexity Pro AI Chat"
+      },
+      {
+        "command": "perplexity-pro-ai-chat.setApiKey",
+        "title": "Set Perplexity Pro AI API Key"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "Perplexity Pro AI",
+      "properties": {
+        "perplexityProAI.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Your Perplexity Pro AI API key. Get it from https://www.perplexity.ai/settings/api."
+        }
+      }
+    },
+    "viewsWelcome": [
+      {
+        "view": "perplexityProAIChatView",
+        "contents": "Welcome to Perplexity Pro AI Chat"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "perplexityProAIChat",
+          "title": "Perplexity Chat",
+          "icon": "src/chat-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "perplexityProAIChat": [
+        {
+          "type": "webview",
+          "id": "perplexityProAIChatView",
+          "name": "Perplexity Chat",
+          "contextualTitle": "Perplexity Pro AI Chat"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "npm run check-types && npm run lint && node esbuild.js",
+    "watch": "npm-run-all -p watch:*",
+    "watch:esbuild": "node esbuild.js --watch",
+    "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
+    "package": "npm run check-types && npm run lint && node esbuild.js --production",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "22.x",
+    "@types/node-fetch": "^2.6.13",
+    "@types/vscode": "^1.104.0",
+    "@typescript-eslint/eslint-plugin": "^8.42.0",
+    "@typescript-eslint/parser": "^8.42.0",
+    "@vscode/test-cli": "^0.0.11",
+    "@vscode/test-electron": "^2.5.2",
+    "esbuild": "^0.25.9",
+    "eslint": "^9.34.0",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "node-fetch": "^2.7.0",
+    "undici": "^7.16.0"
+  },
+  "license": "MIT",
+  "publisher": "muzzafarrather",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/muzzafarrather/Perplexity-Pro-AI-Chat.git"
+  },
+  "homepage": "https://github.com/muzzafarrather/Perplexity-Pro-AI-Chat/blob/main/README.md",
+  "bugs": {
+    "url": "https://github.com/muzzafarrather/Perplexity-Pro-AI-Chat/issues"
+  },
+  "files": [
+    "dist",
+    "src/webview.html",
+    "src/chat-icon.svg",
+    "LICENSE.txt"
+  ]
+}

@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perplexity Pro AI Chat</title>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            background: var(--vscode-sideBar-background);
+            color: var(--vscode-sideBar-foreground);
+            font-family: var(--vscode-font-family);
+            font-size: var(--vscode-font-size);
+            line-height: 1.4;
+        }
+        #container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            padding: 0.5rem;
+            box-sizing: border-box;
+            overflow: hidden;
+            gap: 0.5rem;
+        }
+        h2 {
+            margin: 0;
+            padding: 0.5rem 0;
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--vscode-sideBarTitle-foreground);
+            border-bottom: 1px solid var(--vscode-sideBarSectionHeader-border);
+        }
+        #chat {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.5rem;
+            background: var(--vscode-editor-background);
+            border-radius: 4px;
+            gap: 0.5rem;
+            display: flex;
+            flex-direction: column;
+        }
+        .input-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            min-height: fit-content;
+            background: var(--vscode-sideBar-background);
+            padding: 0.5rem 0;
+            border-top: 1px solid var(--vscode-sideBarSectionHeader-border);
+        }
+        textarea#input {
+            width: 100%;
+            min-height: 60px;
+            max-height: 200px;
+            resize: vertical;
+            padding: 0.5rem;
+            border: 1px solid var(--vscode-input-border);
+            border-radius: 4px;
+            background: var(--vscode-input-background);
+            color: var(--vscode-input-foreground);
+            font-family: var(--vscode-font-family);
+            font-size: var(--vscode-font-size);
+            outline: none;
+        }
+        textarea#input:focus {
+            border-color: var(--vscode-focusBorder);
+            box-shadow: 0 0 0 2px var(--vscode-focusBorder);
+        }
+        textarea#input:hover {
+            border-color: var(--vscode-focusBorder);
+        }
+        .controls {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        select {
+            padding: 0.3rem 0.5rem;
+            border: 1px solid var(--vscode-dropdown-border);
+            border-radius: 2px;
+            background: var(--vscode-dropdown-background);
+            color: var(--vscode-dropdown-foreground);
+            font-family: var(--vscode-font-family);
+            font-size: var(--vscode-font-size);
+            outline: none;
+        }
+        select:focus {
+            border-color: var(--vscode-focusBorder);
+            outline: 1px solid var(--vscode-focusBorder);
+        }
+        #modelDropdown, #mode {
+            flex: 1;
+            min-width: 100px;
+        }
+        #modelDropdown:focus, #mode:focus {
+            border-color: var(--vscode-focusBorder);
+            box-shadow: 0 0 0 2px var(--vscode-focusBorder);
+        }
+        #modelDropdown:hover, #mode:hover {
+            border-color: var(--vscode-focusBorder);
+        }
+        button#send {
+            padding: 0.3rem 0.8rem;
+            border: none;
+            border-radius: 2px;
+            background: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
+            cursor: pointer;
+            font-family: var(--vscode-font-family);
+            font-size: var(--vscode-font-size);
+        }
+        button#send:hover {
+            background: var(--vscode-button-hoverBackground);
+        }
+        button#send:active {
+            background: var(--vscode-button-pressedBackground);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--vscode-scrollbarSlider-background);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--vscode-scrollbarSlider-hoverBackground);
+        }
+        ::-webkit-scrollbar-corner {
+            background: transparent;
+        }
+        /* Loading spinner animation */
+        .message {
+            padding: 0.5rem;
+            border-radius: 4px;
+            word-break: break-word;
+        }
+        .user {
+            background: var(--vscode-editor-background);
+            border: 1px solid var(--vscode-input-border);
+        }
+        .ai {
+            background: var(--vscode-editor-inactiveSelectionBackground);
+            border: 1px solid var(--vscode-input-border);
+        }
+        .loading-spinner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.3rem;
+            padding: 0.5rem;
+        }
+        .loading-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--vscode-button-background);
+            animation: bounce 0.5s alternate infinite;
+        }
+        .loading-dot:nth-child(2) { animation-delay: 0.15s; }
+        .loading-dot:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes bounce {
+            to { transform: translateY(-4px); }
+        }
+        body {
+            font-family: var(--vscode-font-family);
+            background: var(--vscode-sideBar-background);
+            color: var(--vscode-sideBar-foreground);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        h2 {
+            margin: 1em 1em 0.5em 1em;
+            font-size: 1.2em;
+            color: var(--vscode-sideBarTitle-foreground);
+        }
+        #chat {
+            flex: 1;
+            overflow-y: auto;
+            margin: 0 1em 0.5em 1em;
+            padding: 0.5em;
+            background: var(--vscode-editor-background);
+            border-radius: 6px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        }
+        .user {
+            color: var(--vscode-editor-foreground);
+            background: var(--vscode-editor-background);
+            border-radius: 6px;
+            padding: 0.7em 1em;
+            margin-bottom: 0.8em;
+            border: 1px solid var(--vscode-editorWidget-border);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+            font-size: 1.05em;
+        }
+        .ai {
+            color: var(--vscode-editor-foreground);
+            background: var(--vscode-sideBar-background);
+            border-radius: 6px;
+            padding: 0.7em 1em;
+            margin-bottom: 0.8em;
+            border: 1px solid var(--vscode-editorWidget-border);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+            font-size: 1.05em;
+        }
+        .ai pre, .user pre {
+            background: var(--vscode-editor-background);
+            color: var(--vscode-editor-foreground);
+            border-radius: 4px;
+            padding: 0.7em;
+            font-size: 1em;
+            overflow-x: auto;
+            margin: 0.7em 0;
+        }
+        .ai code, .user code {
+            background: var(--vscode-editorWidget-background);
+            color: var(--vscode-editorWidget-foreground);
+            border-radius: 3px;
+            padding: 0.2em 0.4em;
+            font-size: 0.98em;
+        }
+        .ai strong, .user strong {
+            color: var(--vscode-sideBarTitle-foreground);
+        }
+        .ai em, .user em {
+            color: var(--vscode-descriptionForeground);
+        }
+        .ai ul, .user ul {
+            margin: 0.5em 0 0.5em 1.2em;
+            padding: 0;
+        }
+        .ai li, .user li {
+            margin-bottom: 0.3em;
+        }
+        .input-row {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            padding: 1em;
+            background: var(--vscode-sideBar-background);
+            border-top: 1px solid var(--vscode-sideBarSectionHeader-border);
+        }
+        #input {
+            width: 100%;
+            font-size: 1em;
+            padding: 0.5em;
+            border-radius: 4px;
+            border: 1px solid var(--vscode-input-border);
+            background: var(--vscode-input-background);
+            color: var(--vscode-input-foreground);
+            min-height: 60px;
+            resize: vertical;
+        }
+        .controls-below {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.3rem;
+        }
+        .selectors {
+            display: flex;
+            gap: 0.5rem;
+            flex: 1;
+        }
+        .selectors select {
+            flex: 1;
+        }
+        #send {
+            font-size: 1em;
+            padding: 0.5em 1.2em;
+            border-radius: 4px;
+            border: none;
+            background: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        #send:hover {
+            background: var(--vscode-button-hoverBackground);
+        }
+        #modelDropdown:focus, #mode:focus {
+            border-color: var(--vscode-focusBorder);
+            box-shadow: 0 0 0 2px var(--vscode-focusBorder);
+        }
+        #send:hover {
+            background: var(--vscode-button-hoverBackground);
+        }
+        .agentic-info {
+            background: var(--vscode-editorInfo-background);
+            color: var(--vscode-editorInfo-foreground);
+            padding: 0.5rem;
+            border-radius: 3px;
+            border-left: 3px solid var(--vscode-infoButton-background);
+            font-size: 0.9em;
+        }
+        /* Action buttons in agentic responses */
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        .action-button {
+            padding: 0.3rem 0.8rem;
+            border: 1px solid var(--vscode-button-border);
+            border-radius: 2px;
+            background: var(--vscode-button-secondaryBackground);
+            color: var(--vscode-button-secondaryForeground);
+            cursor: pointer;
+        }
+        .action-button:hover {
+            background: var(--vscode-button-secondaryHoverBackground);
+        }
+        .action-button.primary {
+            background: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
+            border: none;
+        }
+        .action-button.primary:hover {
+            background: var(--vscode-button-hoverBackground);
+        }
+        /* Message role labels */
+        .role-label {
+            font-weight: 500;
+            margin-bottom: 0.3rem;
+            color: var(--vscode-editorLineNumber-foreground);
+        }
+        .ai-output pre, .ai-output code {
+            background: var(--vscode-editor-background);
+            color: var(--vscode-editor-foreground);
+            border-radius: 5px;
+            padding: 0.5em;
+            font-size: 1em;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h2>Perplexity Pro AI Chat</h2>
+        <div id="chat"></div>
+        <div class="input-row">
+            <textarea id="input" placeholder="Ask something..." autocomplete="off"></textarea>
+            <div class="controls-below">
+                <div class="selectors">
+                    <select id="modelDropdown">
+                        <option value="sonar-pro">sonar-pro</option>
+                        <option value="sonar-research">sonar-research</option>
+                    </select>
+                    <select id="mode">
+                        <option value="chat">Chat</option>
+                        <option value="agentic">Agent</option>
+                    </select>
+                </div>
+                <button id="send">Send</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        const vscode = acquireVsCodeApi();
+        const chat = document.getElementById('chat');
+        const input = document.getElementById('input');
+        const send = document.getElementById('send');
+        const mode = document.getElementById('mode');
+
+        function sendMessage() {
+            const text = input.value.trim();
+            if (!text) return;
+            const selectedMode = mode.value;
+            const selectedModel = document.getElementById('modelDropdown').value;
+            chat.innerHTML += `<div class='user'><b>You (${selectedMode}):</b> ${text}</div>`;
+            // Show loading animation while waiting for response
+            chat.innerHTML += `<div id='loading-indicator' class='ai loading-spinner'>
+                <span class='loading-dot'></span>
+                <span class='loading-dot'></span>
+                <span class='loading-dot'></span>
+            </div>`;
+            vscode.postMessage({ command: 'ask', text, mode: selectedMode, model: selectedModel });
+            input.value = '';
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        send.onclick = sendMessage;
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Enhanced Markdown renderer with syntax highlighting for code blocks
+        function renderMarkdown(text) {
+            // Code blocks with language
+            text = text.replace(/```([\w]*)\n([\s\S]*?)```/g, (m, lang, code) => {
+                return `<pre><code class='lang-${lang}'>${highlightCode(code, lang)}</code></pre>`;
+            });
+            // Inline code
+            text = text.replace(/`([^`]+)`/g, (m, code) => `<code>${escapeHtml(code)}</code>`);
+            // Bold
+            text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+            // Italics
+            text = text.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+            // Links
+            text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+            // Lists
+            text = text.replace(/(^|\n)[*-] (.+)/g, '$1<li>$2</li>');
+            // Paragraphs
+            text = text.replace(/\n{2,}/g, '<br><br>');
+            return text;
+        }
+        // Simple syntax highlighter for Python and JS
+        function highlightCode(code, lang) {
+            code = escapeHtml(code);
+            if (lang === 'python' || lang === 'py') {
+                // Highlight print, def, class, import, return, etc.
+                code = code.replace(/\b(print|def|class|import|return|if|else|elif|for|while|in|from|as|with|try|except|finally|pass|break|continue|lambda|yield|global|nonlocal|assert|del|raise|True|False|None)\b/g, '<span style="color:#d19a66;font-weight:bold;">$1</span>');
+                code = code.replace(/(#.*)/g, '<span style="color:#5c6370;">$1</span>');
+            } else if (lang === 'js' || lang === 'javascript') {
+                code = code.replace(/\b(function|const|let|var|if|else|for|while|return|class|import|from|export|default|new|try|catch|finally|throw|true|false|null|undefined)\b/g, '<span style="color:#d19a66;font-weight:bold;">$1</span>');
+                code = code.replace(/(\/\/.*)/g, '<span style="color:#5c6370;">$1</span>');
+            }
+            return code;
+        }
+        function escapeHtml(text) {
+            return text.replace(/[&<>"']/g, function (c) {
+                return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c];
+            });
+        }
+
+        window.addEventListener('message', event => {
+            const message = event.data;
+            // Always remove loading indicator first for any new message
+            const loadingDiv = document.getElementById('loading-indicator');
+            if (loadingDiv) loadingDiv.remove();
+
+            if (message.command === 'response') {
+                const marked = window.marked || ((md) => md); // fallback if marked not loaded
+                let html = marked(message.text);
+                chat.innerHTML += `<div class='ai'><b>AI:</b><div class='ai-output'>${html}</div></div>`;
+                chat.scrollTop = chat.scrollHeight;
+            } else if (message.command === 'loadHistory') {
+                chat.innerHTML = '';
+                for (const entry of message.history) {
+                    if (entry.role === 'user') {
+                        chat.innerHTML += `<div class='user'><b>You:</b> ${renderMarkdown(entry.content)}</div>`;
+                    } else if (entry.role === 'ai') {
+                        chat.innerHTML += `<div class='ai'><b>AI:</b> ${renderMarkdown(entry.content)}</div>`;
+                    }
+                }
+                chat.scrollTop = chat.scrollHeight;
+            } else if (message.command === 'agenticConfirm') {
+                // Show inline confirmation UI
+                let summary = '';
+                if (message.action.type === 'edit') {
+                    summary = `Edit file: ${message.action.file}`;
+                } else if (message.action.type === 'create') {
+                    summary = `Create file: ${message.action.file}`;
+                } else if (message.action.type === 'scaffold') {
+                    summary = `Create files: ${message.action.files.map(f => f.path).join(', ')}`;
+                }
+                const confirmId = 'agentic-confirm-' + Date.now();
+                chat.innerHTML += `<div class='ai'><b>Agentic Action:</b> ${renderMarkdown(summary)}<br>
+                    <button id='${confirmId}-allow'>Allow</button>
+                    <button id='${confirmId}-cancel'>Cancel</button></div>`;
+                chat.scrollTop = chat.scrollHeight;
+                document.getElementById(`${confirmId}-allow`).onclick = () => {
+                    vscode.postMessage({ command: 'agenticAction', action: message.action });
+                    document.getElementById(`${confirmId}-allow`).disabled = true;
+                    document.getElementById(`${confirmId}-cancel`).disabled = true;
+                };
+                document.getElementById(`${confirmId}-cancel`).onclick = () => {
+                    document.getElementById(`${confirmId}-allow`).disabled = true;
+                    document.getElementById(`${confirmId}-cancel`).disabled = true;
+                };
+            } else if (message.command === 'agentic') {
+                chat.innerHTML += `<div class='ai'><b>Agentic:</b> ${renderMarkdown(message.text)}</div>`;
+                chat.scrollTop = chat.scrollHeight;
+            } else if (message.command === 'agenticInfo') {
+                chat.innerHTML += `<div class='agentic-info'><span>🛠️ ${message.text}</span></div>`;
+                chat.scrollTop = chat.scrollHeight;
+            }
+            // Ensure loading indicator is removed even for error cases
+            const remainingLoadingDiv = document.getElementById('loading-indicator');
+            if (remainingLoadingDiv) remainingLoadingDiv.remove();
+        });
+    </script>
+</body>
+</html>
