@@ -42,6 +42,7 @@
             gap: 0.5rem;
             display: flex;
             flex-direction: column;
+            margin: 0 1rem;
         }
         .input-container {
             display: flex;
@@ -150,13 +151,144 @@
         .ai {
             background: var(--vscode-editor-inactiveSelectionBackground);
             border: 1px solid var(--vscode-input-border);
+            padding: 16px;
+            margin-bottom: 16px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .ai-output {
+            line-height: 1.6;
+            font-size: 14px;
+            padding: 0.5rem;
+        }
+        .ai-output p {
+            margin: 0.8em 0;
+            line-height: 1.6;
+        }
+        .ai-output pre {
+            background: var(--vscode-editor-background);
+            border: 1px solid var(--vscode-input-border);
+            border-radius: 6px;
+            padding: 1rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+            position: relative;
+        }
+        .ai-output pre code {
+            font-family: var(--vscode-editor-font-family);
+            font-size: 13px;
+            line-height: 1.5;
+            color: var(--vscode-editor-foreground);
+        }
+        .ai-output code:not(pre code) {
+            background: var(--vscode-textCodeBlock-background);
+            color: var(--vscode-textLink-foreground);
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-size: 0.9em;
+            font-family: var(--vscode-editor-font-family);
+        }
+        .ai-output ul, .ai-output ol {
+            margin: 1em 0;
+            padding-left: 2em;
+        }
+        .ai-output li {
+            margin: 0.5em 0;
+        }
+        .ai-output blockquote {
+            border-left: 3px solid var(--vscode-textBlockQuote-border);
+            margin: 1em 0;
+            padding: 0.5em 1em;
+            background: var(--vscode-textBlockQuote-background);
+            color: var(--vscode-textBlockQuote-foreground);
+        }
+        .ai-output h1, .ai-output h2, .ai-output h3, .ai-output h4, .ai-output h5, .ai-output h6 {
+            margin: 1.5em 0 0.5em;
+            color: var(--vscode-sideBarTitle-foreground);
+        }
+        .ai-output table {
+            border-collapse: collapse;
+            margin: 1em 0;
+            width: 100%;
+        }
+        .ai-output th, .ai-output td {
+            border: 1px solid var(--vscode-input-border);
+            padding: 0.5em;
+        }
+        .ai-output th {
+            background: var(--vscode-editor-inactiveSelectionBackground);
+        }
+        .ai-output code {
+            font-family: var(--vscode-editor-font-family);
+            background: var(--vscode-textCodeBlock-background);
+            color: var(--vscode-textLink-foreground);
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+        .ai-output pre {
+            background: var(--vscode-textCodeBlock-background);
+            padding: 16px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 1em 0;
+            position: relative;
+        }
+        .ai-output pre code {
+            background: transparent;
+            padding: 0;
+            font-size: 13px;
+            color: var(--vscode-editor-foreground);
+            display: block;
+            line-height: 1.5;
+        }
+        .ai-output ul, .ai-output ol {
+            margin: 0.8em 0;
+            padding-left: 2em;
+        }
+        .ai-output li {
+            margin: 0.3em 0;
+        }
+        .ai-output a {
+            color: var(--vscode-textLink-foreground);
+            text-decoration: none;
+        }
+        .ai-output a:hover {
+            text-decoration: underline;
+        }
+        .ai-output blockquote {
+            border-left: 3px solid var(--vscode-textBlockQuote-border);
+            margin: 0.8em 0;
+            padding-left: 1em;
+            color: var(--vscode-textBlockQuote-foreground);
+        }
+        .ai-output table {
+            border-collapse: collapse;
+            margin: 1em 0;
+            width: 100%;
+        }
+        .ai-output th, .ai-output td {
+            border: 1px solid var(--vscode-textSeparator-foreground);
+            padding: 8px 12px;
+            text-align: left;
+        }
+        .ai-output th {
+            background: var(--vscode-editor-inactiveSelectionBackground);
+        }
+        .loading-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            padding: 0.5rem;
+            background: var(--vscode-editor-background);
+            border-radius: 6px;
+            margin: 8px 0;
         }
         .loading-spinner {
             display: flex;
             align-items: center;
-            justify-content: center;
             gap: 0.3rem;
-            padding: 0.5rem;
         }
         .loading-dot {
             width: 8px;
@@ -169,6 +301,27 @@
         .loading-dot:nth-child(3) { animation-delay: 0.3s; }
         @keyframes bounce {
             to { transform: translateY(-4px); }
+        }
+        .stop-button {
+            background: var(--vscode-button-secondaryBackground);
+            color: var(--vscode-button-secondaryForeground);
+            border: 1px solid var(--vscode-button-border);
+            border-radius: 4px;
+            padding: 4px 12px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: background-color 0.2s;
+        }
+        .stop-button:hover {
+            background: var(--vscode-button-secondaryHoverBackground);
+        }
+        .stop-button svg {
+            width: 12px;
+            height: 12px;
+            fill: currentColor;
         }
         body {
             font-family: var(--vscode-font-family);
@@ -250,6 +403,10 @@
             padding: 1em;
             background: var(--vscode-sideBar-background);
             border-top: 1px solid var(--vscode-sideBarSectionHeader-border);
+            position: sticky;
+            bottom: 0;
+            width: 100%;
+            box-sizing: border-box;
         }
         #input {
             width: 100%;
@@ -261,6 +418,7 @@
             color: var(--vscode-input-foreground);
             min-height: 60px;
             resize: vertical;
+            box-sizing: border-box;
         }
         .controls-below {
             display: flex;
@@ -268,6 +426,8 @@
             align-items: center;
             gap: 0.5rem;
             margin-top: 0.3rem;
+            width: 100%;
+            box-sizing: border-box;
         }
         .selectors {
             display: flex;
@@ -276,6 +436,7 @@
         }
         .selectors select {
             flex: 1;
+            max-width: calc(50% - 0.25rem);
         }
         #send {
             font-size: 1em;
@@ -370,23 +531,75 @@
         </div>
     </div>
     <script>
-        const vscode = acquireVsCodeApi();
+            const vscode = acquireVsCodeApi();
         const chat = document.getElementById('chat');
         const input = document.getElementById('input');
         const send = document.getElementById('send');
         const mode = document.getElementById('mode');
+        
+        // Track if we're currently generating a response
+        let isGenerating = false;
 
-        function sendMessage() {
+        function stopGeneration() {
+            if (isGenerating) {
+                vscode.postMessage({ command: 'stopGeneration' });
+                const loadingIndicator = document.getElementById('loading-indicator');
+                if (loadingIndicator) {
+                    loadingIndicator.remove();
+                }
+                chat.innerHTML += `<div class='ai'><b>AI:</b> Generation stopped by user.</div>`;
+                chat.scrollTop = chat.scrollHeight;
+                isGenerating = false;
+            }
+        }
+
+        // Add copy button styles
+        const style = document.createElement('style');
+        style.textContent = `
+            .copy-button {
+                position: absolute;
+                right: 8px;
+                top: 8px;
+                background: var(--vscode-button-secondaryBackground);
+                color: var(--vscode-button-secondaryForeground);
+                border: 1px solid var(--vscode-button-border);
+                border-radius: 4px;
+                padding: 4px 8px;
+                font-size: 12px;
+                cursor: pointer;
+                opacity: 0;
+                transition: opacity 0.2s;
+            }
+            pre:hover .copy-button {
+                opacity: 1;
+            }
+            .copy-button:hover {
+                background: var(--vscode-button-secondaryHoverBackground);
+            }
+            pre {
+                position: relative;
+            }
+        `;
+        document.head.appendChild(style);        function sendMessage() {
             const text = input.value.trim();
-            if (!text) return;
+            if (!text || isGenerating) return;
             const selectedMode = mode.value;
             const selectedModel = document.getElementById('modelDropdown').value;
             chat.innerHTML += `<div class='user'><b>You (${selectedMode}):</b> ${text}</div>`;
+            isGenerating = true;
             // Show loading animation while waiting for response
-            chat.innerHTML += `<div id='loading-indicator' class='ai loading-spinner'>
-                <span class='loading-dot'></span>
-                <span class='loading-dot'></span>
-                <span class='loading-dot'></span>
+            chat.innerHTML += `<div id='loading-indicator' class='loading-container'>
+                <div class='loading-spinner'>
+                    <span class='loading-dot'></span>
+                    <span class='loading-dot'></span>
+                    <span class='loading-dot'></span>
+                </div>
+                <button class='stop-button' onclick='stopGeneration()'>
+                    <svg viewBox="0 0 24 24">
+                        <path d="M6 6h12v12H6z"/>
+                    </svg>
+                    Stop
+                </button>
             </div>`;
             vscode.postMessage({ command: 'ask', text, mode: selectedMode, model: selectedModel });
             input.value = '';
@@ -405,34 +618,119 @@
         function renderMarkdown(text) {
             // Code blocks with language
             text = text.replace(/```([\w]*)\n([\s\S]*?)```/g, (m, lang, code) => {
-                return `<pre><code class='lang-${lang}'>${highlightCode(code, lang)}</code></pre>`;
+                const languageClass = lang ? `language-${lang}` : '';
+                const copyButton = `<button class="copy-button" onclick="copyCode(this)">Copy</button>`;
+                return `<pre>${copyButton}<code class='${languageClass}'>${highlightCode(code.trim(), lang)}</code></pre>`;
             });
+            
             // Inline code
             text = text.replace(/`([^`]+)`/g, (m, code) => `<code>${escapeHtml(code)}</code>`);
+            
+            // Headers
+            text = text.replace(/^### (.*$)/gm, '<h3>$1</h3>');
+            text = text.replace(/^## (.*$)/gm, '<h2>$1</h2>');
+            text = text.replace(/^# (.*$)/gm, '<h1>$1</h1>');
+            
             // Bold
             text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+            
             // Italics
             text = text.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+            
             // Links
             text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+            
             // Lists
-            text = text.replace(/(^|\n)[*-] (.+)/g, '$1<li>$2</li>');
+            text = text.replace(/^\s*[-*+]\s+(.+)/gm, '<li>$1</li>');
+            text = text.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+            
+            // Numbered lists
+            text = text.replace(/^\s*(\d+)\.\s+(.+)/gm, '<li>$2</li>');
+            text = text.replace(/(<li>.*<\/li>)/s, '<ol>$1</ol>');
+            
+            // Blockquotes
+            text = text.replace(/^\s*>\s+(.+)/gm, '<blockquote>$1</blockquote>');
+            
+            // Tables
+            const tableRegex = /\|(.+)\|\n\|[-|]+\|\n((\|.+\|\n)+)/g;
+            text = text.replace(tableRegex, (match, header, rows) => {
+                const headers = header.split('|').map(h => h.trim()).filter(Boolean);
+                const tableRows = rows.trim().split('\n').map(row => {
+                    const cells = row.split('|').map(cell => cell.trim()).filter(Boolean);
+                    return `<tr>${cells.map(cell => `<td>${cell}</td>`).join('')}</tr>`;
+                });
+                
+                return `<table>
+                    <thead>
+                        <tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>
+                    </thead>
+                    <tbody>${tableRows.join('')}</tbody>
+                </table>`;
+            });
+            
+            // Horizontal rules
+            text = text.replace(/^---$/gm, '<hr>');
+            
             // Paragraphs
-            text = text.replace(/\n{2,}/g, '<br><br>');
+            text = text.replace(/\n\n([^<].*)/g, '<p>$1</p>');
+            
             return text;
         }
         // Simple syntax highlighter for Python and JS
         function highlightCode(code, lang) {
             code = escapeHtml(code);
+            const colors = {
+                keyword: 'var(--vscode-symbolIcon-keywordForeground, #d19a66)',
+                string: 'var(--vscode-symbolIcon-stringForeground, #98c379)',
+                comment: 'var(--vscode-symbolIcon-textForeground, #5c6370)',
+                number: 'var(--vscode-symbolIcon-numberForeground, #d19a66)',
+                operator: 'var(--vscode-symbolIcon-operatorForeground, #56b6c2)',
+                function: 'var(--vscode-symbolIcon-functionForeground, #61afef)',
+                type: 'var(--vscode-symbolIcon-classForeground, #e5c07b)'
+            };
+
             if (lang === 'python' || lang === 'py') {
-                // Highlight print, def, class, import, return, etc.
-                code = code.replace(/\b(print|def|class|import|return|if|else|elif|for|while|in|from|as|with|try|except|finally|pass|break|continue|lambda|yield|global|nonlocal|assert|del|raise|True|False|None)\b/g, '<span style="color:#d19a66;font-weight:bold;">$1</span>');
-                code = code.replace(/(#.*)/g, '<span style="color:#5c6370;">$1</span>');
+                // Keywords
+                code = code.replace(/\b(print|def|class|import|return|if|else|elif|for|while|in|from|as|with|try|except|finally|pass|break|continue|lambda|yield|global|nonlocal|assert|del|raise|True|False|None)\b/g, 
+                    `<span style="color:${colors.keyword};">$1</span>`);
+                // Strings
+                code = code.replace(/'([^'\\]*(\\.[^'\\]*)*)'|"([^"\\]*(\\.[^"\\]*)*)"/g,
+                    `<span style="color:${colors.string};">$&</span>`);
+                // Comments
+                code = code.replace(/(#.*)/g, `<span style="color:${colors.comment};">$1</span>`);
+                // Numbers
+                code = code.replace(/\b(\d+(\.\d+)?)\b/g, `<span style="color:${colors.number};">$1</span>`);
+                // Function calls
+                code = code.replace(/(\w+)\(/g, `<span style="color:${colors.function};">$1</span>(`);
             } else if (lang === 'js' || lang === 'javascript') {
-                code = code.replace(/\b(function|const|let|var|if|else|for|while|return|class|import|from|export|default|new|try|catch|finally|throw|true|false|null|undefined)\b/g, '<span style="color:#d19a66;font-weight:bold;">$1</span>');
-                code = code.replace(/(\/\/.*)/g, '<span style="color:#5c6370;">$1</span>');
+                // Keywords
+                code = code.replace(/\b(function|const|let|var|if|else|for|while|return|class|import|from|export|default|new|try|catch|finally|throw|true|false|null|undefined|async|await)\b/g,
+                    `<span style="color:${colors.keyword};">$1</span>`);
+                // Strings
+                code = code.replace(/'([^'\\]*(\\.[^'\\]*)*)'|"([^"\\]*(\\.[^"\\]*)*)"|\`([^\`\\]*(\\.[^\`\\]*)*)\`/g,
+                    `<span style="color:${colors.string};">$&</span>`);
+                // Comments
+                code = code.replace(/\/\/.*/g, `<span style="color:${colors.comment};">$&</span>`);
+                code = code.replace(/\/\*[\s\S]*?\*\//g, `<span style="color:${colors.comment};">$&</span>`);
+                // Numbers
+                code = code.replace(/\b(\d+(\.\d+)?)\b/g, `<span style="color:${colors.number};">$1</span>`);
+                // Function calls
+                code = code.replace(/(\w+)\(/g, `<span style="color:${colors.function};">$1</span>(`);
+                // Template literal expressions
+                code = code.replace(/\$\{([^}]+)\}/g, `<span style="color:${colors.operator};">\${</span>$1<span style="color:${colors.operator};">}</span>`);
             }
             return code;
+        }
+
+        function copyCode(button) {
+            const codeElement = button.nextElementSibling;
+            const code = codeElement.textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                button.textContent = 'Copied!';
+                setTimeout(() => {
+                    button.textContent = 'Copy';
+                }, 2000);
+            });
         }
         function escapeHtml(text) {
             return text.replace(/[&<>"']/g, function (c) {
@@ -445,21 +743,24 @@
             // Always remove loading indicator first for any new message
             const loadingDiv = document.getElementById('loading-indicator');
             if (loadingDiv) loadingDiv.remove();
+            isGenerating = false;
 
-            if (message.command === 'response') {
+            if (message.command === 'loadHistory') {
+                chat.innerHTML = '';
+                if (message.history && Array.isArray(message.history)) {
+                    for (const entry of message.history) {
+                        if (entry.role === 'user') {
+                            chat.innerHTML += `<div class='user'><b>You:</b> ${renderMarkdown(entry.content)}</div>`;
+                        } else if (entry.role === 'ai') {
+                            chat.innerHTML += `<div class='ai'><b>AI:</b><div class='ai-output'>${renderMarkdown(entry.content)}</div></div>`;
+                        }
+                    }
+                }
+                chat.scrollTop = chat.scrollHeight;
+            } else if (message.command === 'response') {
                 const marked = window.marked || ((md) => md); // fallback if marked not loaded
                 let html = marked(message.text);
                 chat.innerHTML += `<div class='ai'><b>AI:</b><div class='ai-output'>${html}</div></div>`;
-                chat.scrollTop = chat.scrollHeight;
-            } else if (message.command === 'loadHistory') {
-                chat.innerHTML = '';
-                for (const entry of message.history) {
-                    if (entry.role === 'user') {
-                        chat.innerHTML += `<div class='user'><b>You:</b> ${renderMarkdown(entry.content)}</div>`;
-                    } else if (entry.role === 'ai') {
-                        chat.innerHTML += `<div class='ai'><b>AI:</b> ${renderMarkdown(entry.content)}</div>`;
-                    }
-                }
                 chat.scrollTop = chat.scrollHeight;
             } else if (message.command === 'agenticConfirm') {
                 // Show inline confirmation UI

@@ -37,6 +37,7 @@ class PerplexityChatViewProvider implements vscode.WebviewViewProvider {
 	private _chatHistory: Array<{ role: string, content: string }> = [];
 	private _context: vscode.ExtensionContext;
 	private _secrets: vscode.SecretStorage;
+	private _activeRequests: Map<string, AbortController> = new Map();
 
 	constructor(context: vscode.ExtensionContext, secrets: vscode.SecretStorage) {
 		this._context = context;
@@ -47,6 +48,21 @@ class PerplexityChatViewProvider implements vscode.WebviewViewProvider {
 				try { this._chatHistory = JSON.parse(history); } catch {}
 			}
 		});
+	}
+
+	private async loadAndSendHistory(webviewView: vscode.WebviewView) {
+		try {
+			const history = await this._secrets.get('perplexityChatHistory');
+			if (history) {
+				this._chatHistory = JSON.parse(history);
+			} else {
+				this._chatHistory = [];
+			}
+			webviewView.webview.postMessage({ command: 'loadHistory', history: this._chatHistory });
+		} catch (error) {
+			console.error('Error loading chat history:', error);
+			this._chatHistory = [];
+		}
 	}
 
 	async resolveWebviewView(
@@ -62,39 +78,69 @@ class PerplexityChatViewProvider implements vscode.WebviewViewProvider {
 		const html = await getWebviewContent(this._context);
 		webviewView.webview.html = html;
 
-		// Send chat history after HTML is set
-		const sendHistory = () => {
-			this._secrets.get('perplexityChatHistory').then(history => {
-				let chatHistory = [];
-				if (history) {
-					try { chatHistory = JSON.parse(history); } catch {}
-				}
-				this._chatHistory = chatHistory;
-				webviewView.webview.postMessage({ command: 'loadHistory', history: this._chatHistory });
-			});
-		};
-		setTimeout(sendHistory, 100);
+		// Load and send chat history
+		await this.loadAndSendHistory(webviewView);
+
+		// Register visibility change handler
+		webviewView.onDidChangeVisibility(() => {
+			if (webviewView.visible) {
+				this.loadAndSendHistory(webviewView);
+			}
+		});
 
 		webviewView.webview.onDidReceiveMessage(async message => {
-			if (message.command === 'ask') {
-				// Store user message in chat history
-				this._chatHistory.push({ role: 'user', content: message.text });
-				await this._secrets.store('perplexityChatHistory', JSON.stringify(this._chatHistory));
+            if (message.command === 'stopGeneration') {
+                // Abort all active requests
+                for (const controller of this._activeRequests.values()) {
+                    controller.abort();
+                }
+                this._activeRequests.clear();
+            } else if (message.command === 'ask') {
+                // Store user message in chat history
+                this._chatHistory.push({ role: 'user', content: message.text });
+                await this._secrets.store('perplexityChatHistory', JSON.stringify(this._chatHistory));
 
-				const response = await askPerplexity(message.text, this._secrets, message.model);
-				
-				// Store AI response in chat history
-				this._chatHistory.push({ role: 'ai', content: response });
-				await this._secrets.store('perplexityChatHistory', JSON.stringify(this._chatHistory));
+                // Create an AbortController for the fetch request
+                const controller = new AbortController();
+                const signal = controller.signal;
 
-				// Parse response for agentic actions and code blocks
-				const agenticActionPerformed = await this.handleAgenticActions(message.text, response, message.mode === 'agentic');
-				
-				if (!agenticActionPerformed) {
-					// Only show response if no agentic action was performed
-					webviewView.webview.postMessage({ command: 'response', text: response });
-				}
-			}
+                // Store the controller in a map using a unique request ID
+                const requestId = Date.now().toString();
+                this._activeRequests.set(requestId, controller);
+
+                try {
+                    const response = await askPerplexity(message.text, this._secrets, message.model, signal);
+                    
+                    // Request completed successfully, remove from active requests
+                    this._activeRequests.delete(requestId);
+                    
+                    // Store AI response in chat history
+                    this._chatHistory.push({ role: 'ai', content: response });
+                    await this._secrets.store('perplexityChatHistory', JSON.stringify(this._chatHistory));
+
+                    // Parse response for agentic actions and code blocks
+                    const agenticActionPerformed = await this.handleAgenticActions(message.text, response, message.mode === 'agentic');
+                    
+                    if (!agenticActionPerformed) {
+                        // Only show response if no agentic action was performed
+                        webviewView.webview.postMessage({ command: 'response', text: response });
+                    }
+                } catch (error: any) {
+                    // Check if this was an abort error
+                    if (error.name === 'AbortError') {
+                        webviewView.webview.postMessage({ 
+                            command: 'response', 
+                            text: 'Request cancelled by user.'
+                        });
+                    } else {
+                        webviewView.webview.postMessage({ 
+                            command: 'response', 
+                            text: `Error: ${error.message}`
+                        });
+                    }
+                    this._activeRequests.delete(requestId);
+                }
+            }
 		});
 	}
 
@@ -228,7 +274,7 @@ context.subscriptions.push(setApiKeyCmd);
 
 const PPLX_API_URL = 'https://api.perplexity.ai/chat/completions';
 
-async function askPerplexity(text: string, secrets: vscode.SecretStorage, model: string = 'sonar-pro'): Promise<string> {
+async function askPerplexity(text: string, secrets: vscode.SecretStorage, model: string = 'sonar-pro', signal?: AbortSignal): Promise<string> {
 	const apiKey = await secrets.get('perplexityApiKey');
 	if (!apiKey) {
 		return 'Error: No Perplexity Pro AI API key set. Please use the "Set Perplexity Pro AI API Key" command to set your API key.';
@@ -241,6 +287,7 @@ async function askPerplexity(text: string, secrets: vscode.SecretStorage, model:
 				'Authorization': `Bearer ${apiKey}`,
 				'Content-Type': 'application/json'
 			},
+			signal,
 			body: JSON.stringify({
 				model,
 				messages: [
