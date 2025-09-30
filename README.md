@@ -83,6 +83,10 @@ Choose between two powerful Perplexity models:
 
 ## 🆕 Latest Updates
 
+### Version 1.3.1
+- Fixed icon issue for marketplace.
+- Fixed some minor performance issues.
+
 ### Version 1.3.0
 - Enhanced UI with VS Code theme integration
 - Improved file operation reliability
@@ -107,7 +111,7 @@ This extension is licensed under the MIT License.
 
 This extension:
 - Only sends queries to Perplexity when you submit them
-- Stores only your API key (securely) and chat history
+- Locally stores your API key and chat history securely
 - Does not collect personal information
 - Does not share workspace data without explicit action
 
