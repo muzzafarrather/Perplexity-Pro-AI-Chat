@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Perplexity Pro AI Chat</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.js"></script>
+
     <style>
         body, html {
             height: 100%;
@@ -507,6 +510,30 @@
             white-space: pre-wrap;
             word-break: break-word;
         }
+        /* Added copy button styles from the original code */
+        .copy-button {
+            position: absolute;
+            right: 8px;
+            top: 8px;
+            background: var(--vscode-button-secondaryBackground);
+            color: var(--vscode-button-secondaryForeground);
+            border: 1px solid var(--vscode-button-border);
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 12px;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        pre:hover .copy-button {
+            opacity: 1;
+        }
+        .copy-button:hover {
+            background: var(--vscode-button-secondaryHoverBackground);
+        }
+        pre {
+            position: relative;
+        }
     </style>
 </head>
 <body>
@@ -530,8 +557,29 @@
             </div>
         </div>
     </div>
+    
     <script>
-            const vscode = acquireVsCodeApi();
+        // Setup marked options globally
+        marked.setOptions({
+            gfm: true,
+            breaks: true,
+            headerIds: false,
+            mangle: false,
+            highlight: (code, lang) => highlightCode(code, lang)
+        });
+
+        // Enhanced Markdown renderer with syntax highlighting for code blocks
+        function renderMarkdown(text) {
+            try {
+                // Now using marked.parse() safely
+                return marked.parse(text || '');
+            } catch (e) {
+                console.warn('marked.parse failed', e);
+                return text; // Fallback to raw text if parsing fails
+            }
+        }
+
+        const vscode = acquireVsCodeApi();
         const chat = document.getElementById('chat');
         const input = document.getElementById('input');
         const send = document.getElementById('send');
@@ -553,34 +601,7 @@
             }
         }
 
-        // Add copy button styles
-        const style = document.createElement('style');
-        style.textContent = `
-            .copy-button {
-                position: absolute;
-                right: 8px;
-                top: 8px;
-                background: var(--vscode-button-secondaryBackground);
-                color: var(--vscode-button-secondaryForeground);
-                border: 1px solid var(--vscode-button-border);
-                border-radius: 4px;
-                padding: 4px 8px;
-                font-size: 12px;
-                cursor: pointer;
-                opacity: 0;
-                transition: opacity 0.2s;
-            }
-            pre:hover .copy-button {
-                opacity: 1;
-            }
-            .copy-button:hover {
-                background: var(--vscode-button-secondaryHoverBackground);
-            }
-            pre {
-                position: relative;
-            }
-        `;
-        document.head.appendChild(style);        function sendMessage() {
+        function sendMessage() {
             const text = input.value.trim();
             if (!text || isGenerating) return;
             const selectedMode = mode.value;
@@ -614,69 +635,6 @@
             }
         });
 
-        // Enhanced Markdown renderer with syntax highlighting for code blocks
-        function renderMarkdown(text) {
-            // Code blocks with language
-            text = text.replace(/```([\w]*)\n([\s\S]*?)```/g, (m, lang, code) => {
-                const languageClass = lang ? `language-${lang}` : '';
-                const copyButton = `<button class="copy-button" onclick="copyCode(this)">Copy</button>`;
-                return `<pre>${copyButton}<code class='${languageClass}'>${highlightCode(code.trim(), lang)}</code></pre>`;
-            });
-            
-            // Inline code
-            text = text.replace(/`([^`]+)`/g, (m, code) => `<code>${escapeHtml(code)}</code>`);
-            
-            // Headers
-            text = text.replace(/^### (.*$)/gm, '<h3>$1</h3>');
-            text = text.replace(/^## (.*$)/gm, '<h2>$1</h2>');
-            text = text.replace(/^# (.*$)/gm, '<h1>$1</h1>');
-            
-            // Bold
-            text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-            
-            // Italics
-            text = text.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-            
-            // Links
-            text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
-            
-            // Lists
-            text = text.replace(/^\s*[-*+]\s+(.+)/gm, '<li>$1</li>');
-            text = text.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
-            
-            // Numbered lists
-            text = text.replace(/^\s*(\d+)\.\s+(.+)/gm, '<li>$2</li>');
-            text = text.replace(/(<li>.*<\/li>)/s, '<ol>$1</ol>');
-            
-            // Blockquotes
-            text = text.replace(/^\s*>\s+(.+)/gm, '<blockquote>$1</blockquote>');
-            
-            // Tables
-            const tableRegex = /\|(.+)\|\n\|[-|]+\|\n((\|.+\|\n)+)/g;
-            text = text.replace(tableRegex, (match, header, rows) => {
-                const headers = header.split('|').map(h => h.trim()).filter(Boolean);
-                const tableRows = rows.trim().split('\n').map(row => {
-                    const cells = row.split('|').map(cell => cell.trim()).filter(Boolean);
-                    return `<tr>${cells.map(cell => `<td>${cell}</td>`).join('')}</tr>`;
-                });
-                
-                return `<table>
-                    <thead>
-                        <tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>
-                    </thead>
-                    <tbody>${tableRows.join('')}</tbody>
-                </table>`;
-            });
-            
-            // Horizontal rules
-            text = text.replace(/^---$/gm, '<hr>');
-            
-            // Paragraphs
-            text = text.replace(/\n\n([^<].*)/g, '<p>$1</p>');
-            
-            return text;
-        }
-        // Simple syntax highlighter for Python and JS
         function highlightCode(code, lang) {
             code = escapeHtml(code);
             const colors = {
@@ -690,33 +648,22 @@
             };
 
             if (lang === 'python' || lang === 'py') {
-                // Keywords
                 code = code.replace(/\b(print|def|class|import|return|if|else|elif|for|while|in|from|as|with|try|except|finally|pass|break|continue|lambda|yield|global|nonlocal|assert|del|raise|True|False|None)\b/g, 
                     `<span style="color:${colors.keyword};">$1</span>`);
-                // Strings
                 code = code.replace(/'([^'\\]*(\\.[^'\\]*)*)'|"([^"\\]*(\\.[^"\\]*)*)"/g,
                     `<span style="color:${colors.string};">$&</span>`);
-                // Comments
                 code = code.replace(/(#.*)/g, `<span style="color:${colors.comment};">$1</span>`);
-                // Numbers
                 code = code.replace(/\b(\d+(\.\d+)?)\b/g, `<span style="color:${colors.number};">$1</span>`);
-                // Function calls
                 code = code.replace(/(\w+)\(/g, `<span style="color:${colors.function};">$1</span>(`);
             } else if (lang === 'js' || lang === 'javascript') {
-                // Keywords
                 code = code.replace(/\b(function|const|let|var|if|else|for|while|return|class|import|from|export|default|new|try|catch|finally|throw|true|false|null|undefined|async|await)\b/g,
                     `<span style="color:${colors.keyword};">$1</span>`);
-                // Strings
                 code = code.replace(/'([^'\\]*(\\.[^'\\]*)*)'|"([^"\\]*(\\.[^"\\]*)*)"|\`([^\`\\]*(\\.[^\`\\]*)*)\`/g,
                     `<span style="color:${colors.string};">$&</span>`);
-                // Comments
                 code = code.replace(/\/\/.*/g, `<span style="color:${colors.comment};">$&</span>`);
                 code = code.replace(/\/\*[\s\S]*?\*\//g, `<span style="color:${colors.comment};">$&</span>`);
-                // Numbers
                 code = code.replace(/\b(\d+(\.\d+)?)\b/g, `<span style="color:${colors.number};">$1</span>`);
-                // Function calls
                 code = code.replace(/(\w+)\(/g, `<span style="color:${colors.function};">$1</span>(`);
-                // Template literal expressions
                 code = code.replace(/\$\{([^}]+)\}/g, `<span style="color:${colors.operator};">\${</span>$1<span style="color:${colors.operator};">}</span>`);
             }
             return code;
@@ -732,6 +679,7 @@
                 }, 2000);
             });
         }
+        
         function escapeHtml(text) {
             return text.replace(/[&<>"']/g, function (c) {
                 return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c];
@@ -758,8 +706,8 @@
                 }
                 chat.scrollTop = chat.scrollHeight;
             } else if (message.command === 'response') {
-                const marked = window.marked || ((md) => md); // fallback if marked not loaded
-                let html = marked(message.text);
+                // Fixed rendering to use the renderMarkdown function securely
+                let html = renderMarkdown(message.text);
                 chat.innerHTML += `<div class='ai'><b>AI:</b><div class='ai-output'>${html}</div></div>`;
                 chat.scrollTop = chat.scrollHeight;
             } else if (message.command === 'agenticConfirm') {

@@ -83,6 +83,10 @@ Choose between two powerful Perplexity models:
 
 ## 🆕 Latest Updates
 
+### Version 1.5.0
+- Using Markdown.js renderer
+- Fixed some minor issues
+
 ### Version 1.3.1
 - Fixed icon issue for marketplace.
 - Fixed some minor performance issues.
